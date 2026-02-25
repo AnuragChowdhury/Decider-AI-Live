@@ -21,9 +21,9 @@ app = FastAPI(title="Decider-AI Backend", version="0.1.0")
 # CORS Middleware
 from fastapi.middleware.cors import CORSMiddleware
 
-# Get origins from env, strip whitespace, and handle multiple origins
+# Get origins from env, strip whitespace and trailing slashes, and handle multiple origins
 raw_origins = os.getenv("FRONTEND_URLS", "http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173")
-allowed_origins = [o.strip() for o in raw_origins.split(",") if o.strip()]
+allowed_origins = [o.strip().rstrip('/') for o in raw_origins.split(",") if o.strip()]
 
 print(f">>> [CORS] Allowed Origins: {allowed_origins}", flush=True)
 
