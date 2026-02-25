@@ -1,0 +1,27 @@
+fastapi>=0.104.1
+uvicorn>=0.24.0
+pandas
+numpy
+langchain
+langchain-groq
+langgraph
+pydantic>=2.5.0
+pydantic-settings
+python-dotenv
+scikit-learn
+openpyxl
+requests
+python-multipart
+# Auth & Database
+sqlalchemy
+passlib[argon2]
+argon2-cffi
+python-jose[cryptography]
+cryptography
+ddgs
+scipy
+email-validator
+langsmith
+pymysql
+google-auth
+duckdb

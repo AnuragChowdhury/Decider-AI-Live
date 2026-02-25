@@ -1,0 +1,105 @@
+# Data Validation Agent Configuration
+# All thresholds and policies are configurable here
+
+# Type inference thresholds
+coercion_thresholds:
+  numeric: 0.8          # Minimum ratio of values coercible to numeric to classify as numeric
+  date: 0.7             # Minimum ratio of values coercible to datetime to classify as date
+  categorical_unique_ratio: 0.3  # Maximum unique ratio to classify as categorical
+
+# Imputation strategies
+imputation:
+  numeric: median       # Options: median, mean, zero
+  categorical: mode     # Options: mode, unknown
+  date: keep_nat        # Options: keep_nat, forward_fill
+
+# Duplicate handling
+duplicates:
+  default_action: remove_keep_first  # Options: remove_keep_first, flag_only
+
+# Outlier detection parameters
+outlier:
+  zscore_threshold: 3.0           # Z-score threshold for univariate outlier detection
+  iqr_multiplier: 1.5             # IQR multiplier for box-plot outlier detection
+  isolationforest_min_rows: 50    # Minimum rows required to use IsolationForest
+  contamination: 0.05             # Expected proportion of outliers for IsolationForest
+
+# Health score component weights (must sum to ~1.0)
+health_weights:
+  completeness: 0.35    # Weight for missing value score
+  uniqueness: 0.2       # Weight for duplicate detection
+  consistency: 0.2      # Weight for type consistency
+  validity: 0.15        # Weight for constraint validation
+  outlier_penalty: 0.1  # Weight for outlier penalty
+
+# Manual review triggers
+manual_review:
+  health_threshold: 0.6           # Minimum health score for auto-approval
+  coercion_loss_threshold: 0.2    # Maximum acceptable type coercion loss
+
+# File upload limits
+upload:
+  max_bytes: 20000000   # 20 MB maximum file size
+  allowed_extensions:
+    - .csv
+    - .xlsx
+
+# Logging configuration
+logging:
+  level: INFO           # Options: DEBUG, INFO, WARNING, ERROR
+  format: json          # Options: json, text
+  mask_pii: true        # Mask potentially sensitive column values in logs
+
+# DuckDB configuration
+duckdb:
+  default_path: agent_data.db     # Default database file path
+  enable_action_log: true         # Persist action log for auditability
+
+# Analysis configuration
+analysis:
+  top_values_count: 10 # Number of top values to show for categorical columns
+  skewness_threshold: 0.5 # Threshold to flag skewed distributions
+  top_k_contribution_pct: 10 # Top K% for contribution analysis
+
+# Schema Inference Heuristics (Regex-based)
+schema_heuristics:
+  enabled: true
+  patterns:
+    # Force these to be treated as string/categorical even if they look numeric
+    ids:
+      - "id$"
+      - "_id$"
+      - "code$"
+      - "zip"
+      - "postal"
+      - "phone"
+      - "mobile"
+      - "uuid"
+      - "pk"
+      - "fk"
+
+    # Treat these as string (avoid categorical if high cardinality, avoid numeric)
+    text:
+      - "name"
+      - "description"
+      - "desc"
+      - "comment"
+      - "note"
+      - "message"
+      - "address"
+      - "city"
+      - "street"
+      - "title"
+      - "body"
+
+    # Prioritize date checks for these
+    date:
+      - "date"
+      - "time"
+      - "day"
+      - "dob"
+      - "created"
+      - "updated"
+      - "timestamp"
+      - "at$"
+      - "on$"

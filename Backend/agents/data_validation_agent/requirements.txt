@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+pandas
+numpy
+openpyxl
+duckdb
+scikit-learn
+python-multipart
+python-dateutil
+pandera
+rapidfuzz
+pytest
+PyYAML

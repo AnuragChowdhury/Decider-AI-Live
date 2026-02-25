@@ -1,0 +1,64 @@
+# Environment Variables (CRITICAL)
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+
+# Database
+Backend/sql_app.db
+*.db
+*.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env/
+
+# Node / Frontend
+node_modules/
+.next/
+out/
+build/
+.vercel
+dist/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.agent/
+.gemini/
+
+# Scripts & Temp
+debug_*.py
+Backend/debug_*.py
+get_*.py
+retrigger_*.py
+test_*.py
+trigger_*.py
+introspect_*.py
+validation_report_full.json
+session_*_analytics.json
+*.csv
+*.xlsx
+*.json
+!package.json
+!tsconfig.json
+!next.config.js
+!tailwind.config.js
+!postcss.config.js
+!requirements.txt
+!.gitignore
+!brand-icon.png
+!*.md
+
+# Specific to project
+Backend/uploaded_files/
+Backend/faiss_index/
+frontend_local_backup/
