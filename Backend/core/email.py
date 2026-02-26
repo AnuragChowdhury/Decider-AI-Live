@@ -1,15 +1,56 @@
 """
-Gmail SMTP email helper — sends OTP emails for password reset.
-Uses smtplib (stdlib, no extra packages needed).
+Brevo (Sendinblue) HTTP API email helper — sends OTP emails for registration and password reset.
+Uses standard `requests` via Port 443 to bypass Render's strict SMTP blocking.
 """
-import smtplib
 import os
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import requests
 
-MAIL_USERNAME = os.getenv("MAIL_USERNAME", "")
-MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "")
-MAIL_FROM = os.getenv("MAIL_FROM", MAIL_USERNAME)
+# Requires a free account from brevo.com
+BREVO_API_KEY = os.getenv("BREVO_API_KEY", "")
+MAIL_FROM = os.getenv("MAIL_FROM", "noreply@decider-ai.com")
+SENDER_NAME = "DECIDER AI"
+
+
+def _send_email_via_brevo(to_email: str, subject: str, html_content: str, full_name: str) -> None:
+    """Helper method to send email via Brevo's v3 API."""
+    if not BREVO_API_KEY:
+        print(f"[EMAIL ERROR] BREVO_API_KEY is not set. Cannot send email to {to_email}", flush=True)
+        raise ValueError("Email delivery is disabled because BREVO_API_KEY is missing.")
+
+    url = "https://api.brevo.com/v3/smtp/email"
+    
+    headers = {
+        "accept": "application/json",
+        "api-key": BREVO_API_KEY,
+        "content-type": "application/json"
+    }
+    
+    payload = {
+        "sender": {
+            "name": SENDER_NAME,
+            "email": MAIL_FROM
+        },
+        "to": [
+            {
+                "email": to_email,
+                "name": full_name or to_email.split("@")[0]
+            }
+        ],
+        "subject": subject,
+        "htmlContent": html_content
+    }
+
+    try:
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
+        response.raise_for_status()
+        print(f"[EMAIL] Successfully sent '{subject}' to {to_email} via Brevo HTTP API", flush=True)
+    except requests.exceptions.RequestException as e:
+        print(f"[EMAIL ERROR] HTTP Request failed sending to {to_email}: {e}", flush=True)
+        try:
+            print(f"[EMAIL ERROR DETAILS] {response.text}", flush=True)
+        except Exception:
+            pass
+        raise ValueError(f"Brevo HTTP API Error: {str(e)}")
 
 
 def send_reset_otp(to_email: str, otp: str, full_name: str = ""):
@@ -36,21 +77,7 @@ def send_reset_otp(to_email: str, otp: str, full_name: str = ""):
     </div>
     """
 
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = subject
-    msg["From"] = MAIL_FROM
-    msg["To"] = to_email
-    msg.attach(MIMEText(html_body, "html"))
-
-    try:
-        with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
-            server.starttls()
-            server.login(MAIL_USERNAME, MAIL_PASSWORD)
-            server.sendmail(MAIL_FROM, to_email, msg.as_string())
-        print(f"[EMAIL] OTP sent to {to_email}", flush=True)
-    except Exception as e:
-        print(f"[EMAIL ERROR] Failed to send OTP to {to_email}: {e}", flush=True)
-        raise ValueError(f"SMTP Error: {str(e)}")
+    _send_email_via_brevo(to_email, subject, html_body, full_name)
 
 
 def send_registration_otp(to_email: str, otp: str, full_name: str = ""):
@@ -77,19 +104,5 @@ def send_registration_otp(to_email: str, otp: str, full_name: str = ""):
     </div>
     """
 
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = subject
-    msg["From"] = MAIL_FROM
-    msg["To"] = to_email
-    msg.attach(MIMEText(html_body, "html"))
-
-    try:
-        with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
-            server.starttls()
-            server.login(MAIL_USERNAME, MAIL_PASSWORD)
-            server.sendmail(MAIL_FROM, to_email, msg.as_string())
-        print(f"[EMAIL] Registration OTP sent to {to_email}", flush=True)
-    except Exception as e:
-        print(f"[EMAIL ERROR] Failed to send registration OTP to {to_email}: {e}", flush=True)
-        raise ValueError(f"SMTP Error: {str(e)}")
+    _send_email_via_brevo(to_email, subject, html_body, full_name)
 
