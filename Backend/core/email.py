@@ -43,7 +43,8 @@ def send_reset_otp(to_email: str, otp: str, full_name: str = ""):
     msg.attach(MIMEText(html_body, "html"))
 
     try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
+            server.starttls()
             server.login(MAIL_USERNAME, MAIL_PASSWORD)
             server.sendmail(MAIL_FROM, to_email, msg.as_string())
         print(f"[EMAIL] OTP sent to {to_email}", flush=True)
@@ -83,7 +84,8 @@ def send_registration_otp(to_email: str, otp: str, full_name: str = ""):
     msg.attach(MIMEText(html_body, "html"))
 
     try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
+            server.starttls()
             server.login(MAIL_USERNAME, MAIL_PASSWORD)
             server.sendmail(MAIL_FROM, to_email, msg.as_string())
         print(f"[EMAIL] Registration OTP sent to {to_email}", flush=True)
