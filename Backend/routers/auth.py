@@ -129,13 +129,22 @@ def register(user: UserCreate, db: Session = Depends(database.get_db)):
     db.add(reg_otp)
     db.commit()
 
-    _send_registration_otp(new_user, otp)
-
-    return {
-        "message": "Account created. Please verify using the OTP sent to your email (and phone if provided).",
-        "requires_verification": True,
-        "email": user.email,
-    }
+    try:
+        _send_registration_otp(new_user, otp)
+        return {
+            "message": "Account created. Please verify using the OTP sent to your email (and phone if provided).",
+            "requires_verification": True,
+            "email": user.email,
+        }
+    except Exception as e:
+        print(f"[AUTH ERROR] Failed to send registration email: {e}", flush=True)
+        # Registration succeeded, but email failed. Let the user know so they can try Resending later.
+        return {
+            "message": "Account created, but we temporarily failed to send the OTP email. Please try 'Resend OTP' later.",
+            "requires_verification": True,
+            "email": user.email,
+            "email_failed": True
+        }
 
 
 @router.post("/verify-registration")
@@ -189,8 +198,12 @@ def resend_registration_otp(request: ResendRegistrationOTPRequest, db: Session =
     db.add(reg_otp)
     db.commit()
 
-    _send_registration_otp(user, otp)
-    return {"message": "OTP resent successfully."}
+    try:
+        _send_registration_otp(user, otp)
+        return {"message": "OTP resent successfully."}
+    except Exception as e:
+        print(f"[AUTH ERROR] Failed to resend registration email: {e}", flush=True)
+        raise HTTPException(status_code=500, detail="Failed to send the OTP email. Please check backend SMTP configuration.")
 
 
 @router.post("/login", response_model=Token)
@@ -243,9 +256,12 @@ def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(databa
     db.add(reset_token)
     db.commit()
 
-    send_reset_otp(to_email=user.email, otp=otp, full_name=user.full_name or "")
-
-    return {"message": "If that email exists, a reset code has been sent."}
+    try:
+        send_reset_otp(to_email=user.email, otp=otp, full_name=user.full_name or "")
+        return {"message": "If that email exists, a reset code has been sent."}
+    except Exception as e:
+        print(f"[AUTH ERROR] Failed to send reset email: {e}", flush=True)
+        raise HTTPException(status_code=500, detail="Temporary issue sending password reset email. Please try again later.")
 
 
 @router.post("/reset-password")
