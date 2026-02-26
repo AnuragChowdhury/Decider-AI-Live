@@ -101,8 +101,18 @@ def register(user: UserCreate, db: Session = Depends(database.get_db)):
             )
             db.add(reg_otp)
             db.commit()
-            _send_registration_otp(db_user, otp)
-            return {"message": "OTP resent. Please verify your account.", "requires_verification": True, "email": user.email}
+
+            try:
+                _send_registration_otp(db_user, otp)
+                return {"message": "OTP resent. Please verify your account.", "requires_verification": True, "email": user.email}
+            except Exception as e:
+                print(f"[AUTH ERROR] Failed to send registration email: {e}", flush=True)
+                return {
+                    "message": "Account exists, but Render is blocking email delivery (Port 465). Try logging in with Google.",
+                    "requires_verification": True,
+                    "email": user.email,
+                    "email_failed": True
+                }
         raise HTTPException(status_code=400, detail="Email already registered")
 
     hashed_password = auth.get_password_hash(user.password)
